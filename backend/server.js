@@ -85,6 +85,8 @@ const qs = require('querystring');
 const path = require('path');
 const express = require('express');
 const app = express();
+import { auth, createUserWithEmailAndPassword } from './firebaseserver.js';
+
 
 const hostname = '127.0.0.1';
 const port = 3000;
