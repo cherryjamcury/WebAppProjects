@@ -130,6 +130,26 @@ app.post('/signup-data', (req, res) => {
         res.end(JSON.stringify({ message: 'Data received successfully' }));
     });
 });
+app.post('/signin-data', (req, res) => {
+    let body = '';
+
+    req.on('data', (chunk) => {
+        body += chunk;
+    });
+
+    req.on('end', () => {
+        const formData = JSON.parse(body); // Parse JSON data
+        console.log('Received form data:', formData);
+
+        // You can now access formData.name, formData.email, and formData.password
+
+        // Handle the data as needed (e.g., save it to a database)
+        
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ message: 'Data received successfully' }));
+    });
+});
 
 
 const server = http.createServer(app);
