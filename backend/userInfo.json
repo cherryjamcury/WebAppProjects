@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "properties": {
+      "userName": {
+        "type": "string",
+        "description": "The name of the user."
+      },
+      "userEmail": {
+        "type": "string",
+        "format": "email",
+        "description": "The email address of the user."
+      },
+      "gameName": {
+        "type": "object",
+        "properties": {
+          "gameTitle": {
+            "type": "string",
+            "description": "The title of the game."
+          },
+          "winNum": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The number of wins for the game."
+          }
+        },
+        "required": ["gameTitle", "winNum"],
+        "description": "Information about the game."
+      }
+    },
+    "required": ["userName", "userEmail", "gameName"]
+  }
+  
