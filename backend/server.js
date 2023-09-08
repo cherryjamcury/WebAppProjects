@@ -39,20 +39,40 @@ app.post('/signup-data', (req, res) => {
     });
 
     req.on('end',  () => {
-        const formData = JSON.parse(body); // Parse JSON data
-        console.log('Received form data:', formData);
+        const formData = JSON.parse(body);
+        console.log('Received form data for sign up:', formData);
 
-        if(formData['email'] && formData['password']){
-         const uid = firebase.myFunction(formData['name'], formData['email'], formData['password'])
-        // You can now access formData.name, formData.email, and formData.password
+        if(formData['name']&&formData['email'] && formData['password']){
+         const uid = firebase.firebaseSignUp(formData['name'], formData['email'], formData['password'])
         }
-        // Handle the data as needed (e.g., save it to a database)
-        
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ message: 'Data received successfully' }));
     });
 });
+// app.post('/signin-data', (req, res) => {
+//     let body = '';
+
+//     req.on('data', (chunk) => {
+//         body += chunk;
+//     });
+
+//     req.on('end', () => {
+//         const formData = JSON.parse(body); 
+//         console.log('Received form data:', formData);
+//         if(formData['email'] && formData['password']){
+//             firebase.firebaseSignIn(formData['email'], formData['password'])
+//         }
+//         // You can now access formData.name, formData.email, and formData.password
+
+//         // Handle the data as needed (e.g., save it to a database)
+        
+//         res.statusCode = 200;
+//         res.setHeader('Content-Type', 'application/json');
+//         res.end(JSON.stringify({ message: 'Data received successfully' }));
+//     });
+// });
+
 app.post('/signin-data', (req, res) => {
     let body = '';
 
@@ -60,19 +80,27 @@ app.post('/signin-data', (req, res) => {
         body += chunk;
     });
 
-    req.on('end', () => {
-        const formData = JSON.parse(body); // Parse JSON data
+    req.on('end', async () => {
+        const formData = JSON.parse(body); 
         console.log('Received form data:', formData);
 
-        // You can now access formData.name, formData.email, and formData.password
+        if (formData['email'] && formData['password']) {
+            try {
+                await firebase.firebaseSignIn(formData['email'], formData['password']);
+                // Sign-in successful
+            } catch (error) {
+                console.error('Error during sign-in:', error);
+                // Handle error (e.g., send an error response to the client)
+            }
+        }
 
-        // Handle the data as needed (e.g., save it to a database)
-        
+        // Send a response back to the client
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ message: 'Data received successfully' }));
     });
 });
+
 
 
 const server = http.createServer(app);
