@@ -12,6 +12,21 @@ const port = 3000;
 // Serve static files from the "frontend" directory
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+firebase.listIcons()
+  .then((iconsURL) => {
+    console.log('Icons URLs:', iconsURL);
+  })
+  .catch((err) => {
+    console.error('Error:', err);
+  });
+
+
+
+
+
+
+
+
 // Define a route handler for the root URL ("/")
 app.get('/', (req, res) => {
     try {
@@ -50,6 +65,16 @@ app.post('/signup-data', (req, res) => {
         res.end(JSON.stringify({ message: 'Data received successfully' }));
     });
 });
+
+
+
+
+
+
+
+
+
+
 // app.post('/signin-data', (req, res) => {
 //     let body = '';
 

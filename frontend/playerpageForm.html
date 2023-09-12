@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Profile Form</title>
+    <link rel="stylesheet"  type = "text/css" href="playerpageStyle.css">
+    <script src="playerpageControl.js"></script>
+  
+</head>
+<body>
+    <h1>Player Profile Form</h1>
+    <form action="submit_profile.php" method="post">
+        <label for="nickname">Nickname:</label>
+        <input type="text" id="nickname" name="nickname" required><br><br>
+
+        <h2>Select Avatar:</h2>
+        <div id="avatarOptions">
+            <!-- Add your avatar options here -->
+            <img class="avatar-option" src="avatar1.jpg" alt="Avatar 1" width="100" height="100">
+            <img class="avatar-option" src="avatar2.jpg" alt="Avatar 2" width="100" height="100">
+            <!-- Add more avatar options as needed -->
+        </div>
+
+        <input type="hidden" id="selectedAvatar" name="selectedAvatar" value="">
+
+        <!-- Add more fields here as needed -->
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

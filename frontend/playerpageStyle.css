@@ -1,0 +1,9 @@
+.avatar-option {
+    cursor: pointer;
+    margin: 10px;
+    border: 2px solid transparent;
+}
+
+.avatar-option.selected {
+    border-color: blue;
+}
