@@ -11,58 +11,84 @@ admin.initializeApp({
 
 const auth = admin.auth();
 const db = admin.database();
+const bucket = admin.storage().bucket();
+const iconsFolder = 'icons';
 
 function ensureDirectoryExists(directory) {
   if (!fs.existsSync(directory)) {
     fs.mkdirSync(directory, { recursive: true });
+    
   }
+
 }
 
 
 
-// function listIcons() {
+// async function listIcons() {
 //   const iconsURL = [];
 //   ensureDirectoryExists('./icons');
 //   const bucket = admin.storage().bucket();
 //   const iconsFolder = 'icons';
 
-//   bucket.getFiles({ prefix: iconsFolder }, (err, files) => {
-//     if (err) {
-//       console.error('Error listing items in icons folder:', err);
-//       return;
-//     }
+//   return new Promise((resolve, reject) => {
+//     bucket.getFiles({ prefix: iconsFolder }, (err, files) => {
+//       if (err) {
+//         console.error('Error listing items in icons folder:', err);
+//         reject([]);
+//         return;
+//       }
 
-//     files.forEach((file) => {
-//       const localFilePath = `./icons/${path.basename(file.name)}`; // Extracts the file name
-//       const fileStream = fs.createWriteStream(localFilePath);
+//       const promises = files.map((file) => {
+//         return new Promise((resolveFile) => {
+//           const localFilePath = `./icons/${path.basename(file.name)}`;
+//           const fileStream = fs.createWriteStream(localFilePath);
 
-//       bucket.file(file.name).createReadStream()
-//         .on('error', (err) => {
-//           console.error('Error downloading file:', err);
-//         })
-//         .on('end', () => {
-//           console.log(`File ${file.name} downloaded to ${localFilePath}`);
-//         })
-//         .pipe(fileStream);
+//           bucket.file(file.name).createReadStream()
+//             .on('error', (err) => {
+//               console.error('Error downloading file:', err);
+//               resolveFile();
+//             })
+//             .on('end', () => {
+//               console.log(`File ${file.name} downloaded to ${localFilePath}`);
+//               resolveFile(localFilePath);
+//             })
+//             .pipe(fileStream);
 
-//       fileStream.on('finish', () => {
-//         console.log(`File ${file.name} written successfully.`);
-//         iconsURL.push(localFilePath);
+//           fileStream.on('finish', () => {
+//             console.log(`File ${file.name} written successfully.`);
+//           });
+
+//           fileStream.on('error', (err) => {
+//             console.error(`Error writing file ${file.name}:`, err);
+//           });
+//         });
 //       });
 
-//       fileStream.on('error', (err) => {
-//         console.error(`Error writing file ${file.name}:`, err);
-//       });
+//       Promise.all(promises)
+//         .then((urls) => {
+//           urls.forEach(url => {
+//             if (url.includes('.png')) {
+//               iconsURL.push(url.replace('./','../backend/'));
+//             }
+//           });
+//           // iconsURL.push(...urls);
+//           resolve(iconsURL);
+//         })
+//         .catch((err) => {
+//           console.error('Error while processing files:', err);
+//           reject([]);
+//         });
 //     });
 //   });
 // }
 
 async function listIcons() {
-  const iconsURL = [];
-  ensureDirectoryExists('./icons');
-  const bucket = admin.storage().bucket();
-  const iconsFolder = 'icons';
+  const pathMapping = {}; // Initialize mapping object
+  
 
+
+  ensureDirectoryExists('../frontend/icons')
+  
   return new Promise((resolve, reject) => {
     bucket.getFiles({ prefix: iconsFolder }, (err, files) => {
       if (err) {
@@ -73,9 +99,13 @@ async function listIcons() {
 
       const promises = files.map((file) => {
         return new Promise((resolveFile) => {
-          const localFilePath = `./icons/${path.basename(file.name)}`;
+          const localFilePath = `../frontend/icons/${path.basename(file.name)}`;
           const fileStream = fs.createWriteStream(localFilePath);
 
+          if (file.name.includes('.png')) {
+                      
+          pathMapping[`gs://${bucket.name}/${file.name}`] = localFilePath.replace('../frontend/','./');
+          }
           bucket.file(file.name).createReadStream()
             .on('error', (err) => {
               console.error('Error downloading file:', err);
@@ -98,14 +128,8 @@ async function listIcons() {
       });
 
       Promise.all(promises)
-        .then((urls) => {
-          urls.forEach(url => {
-            if (url.includes('.png')) {
-              iconsURL.push(url.replace('./','../backend/'));
-            }
-          });
-          // iconsURL.push(...urls);
-          resolve(iconsURL);
+        .then(() => {
+          resolve(pathMapping);
         })
         .catch((err) => {
           console.error('Error while processing files:', err);
@@ -114,6 +138,7 @@ async function listIcons() {
     });
   });
 }
+
 
 
 
