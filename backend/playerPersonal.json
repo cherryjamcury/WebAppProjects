@@ -1,0 +1,63 @@
+[
+{
+  "personalData": {
+    "info": {
+      "uid": "String",
+      "nickname": "String",
+      "iconLink": "Stirng"
+    },
+    "playedGamse": {
+      "game": {
+        "name": "Stirng",
+        "wins": 0
+      }
+    },
+    "friends": {
+      "friend": {
+        "uid": "String",
+        "nickname": "String"
+      }
+    },
+    "invitations": {
+      "Friendrequest": {
+        "sender": {
+          "uid": {
+            "$ref": "../info/uid"
+          },
+          "nickname": {
+            "$ref": "../info/nickname"
+          }
+        },
+        "receiver": {
+          "nickname": "String",
+          "uid": "String"
+        },
+        "status": "waiting"
+      },
+      "FriendOffer": {
+        "sender": {
+          "nickname": "String",
+          "uid": "String"
+        },
+        "status": "waiting"
+      }
+    },
+    "player1": {
+      "personalData": {
+        "info": {
+          "uid": "123456",
+          "nickname": "JohnDoe",
+          "iconLink": "http://example.com/avatar.jpg"
+        }
+      }
+    }
+},
+
+  "secondDB":{
+    "type":"object",
+    "title":{
+        "type":"string"
+    }
+  }
+}
+]

@@ -1,0 +1,113 @@
+{
+    "type":"object",
+    "registered_players": {
+      "type": "object",
+      "player": {
+        "type": "object",
+        "properties": {
+          "playerName": {
+            "type": "string",
+            "description": "The name of the user."
+          },
+          "playerEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "The email address of the user."
+          },
+          "playerNickname": {
+            "type": "string",
+            "description": "The nickname of the user."
+          },
+          "playerStatus": {
+            "type": "string",
+            "description": "The user status (online, offline, busy)"
+          }
+        },
+        "required": ["playerName", "playerEmail"]
+      }
+    },
+
+
+
+
+
+    "player_page":{
+      "type":"object",
+      "info":{
+
+        "player_uid":{
+          "type":"string"
+        },
+        "player_nickname":{
+          "type":"string"
+        },
+        "player_icon":{
+          "type":"string",
+          "format":"url"
+        }
+      },
+      "played_games":{
+        "game":{
+          "game_name":{
+            "type":"string"
+          },
+          "game_wins":{
+            "type":"integer",
+            "minimum":0
+          }
+        },
+        "player_friends":{
+          "frined":{
+            "friend_nickname":{
+              "type":"string"
+            },
+            "friend_uid":{
+              "type":"string"
+            }
+          }
+        },
+        "invite_friend":{
+          "invation":{
+          "inviter":{
+            "inviter_uid":{
+              "type":"string"
+            },
+            "inviter_nickname":{
+              "type":"string"
+            }
+          },"receiver":{
+            "receiver_uid":{
+              "type":"string"
+            },
+            "receiver_nickname":{
+              "type":"string"
+            }
+          }, "status":{
+            "type":"string"
+          }
+        }
+      
+      
+      
+      },
+      "accept_friend":{
+        "friend_request":{
+          "from":{
+            "sender_uid":{
+              "type":"string"
+            },
+            "sender_nickname":{
+              "type":"string"
+            }
+          }
+        },
+        "status":{
+          "type":"string"
+        }
+      }
+    }
+  }
+   
+
+}
+  
