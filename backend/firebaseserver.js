@@ -131,12 +131,17 @@ async function firebaseSignIn(email, password) {
 }
 
 
+
+
 class DB_registered_players{
+  
   constructor(){
     this.firebaseDB = db.ref();
     this.DBRef = this.firebaseDB.child('registred_players_db');
     this.db_player_page = new DB_player_page(); 
   }
+
+
 
   curTime(){
     const now = new Date();
@@ -156,40 +161,59 @@ class DB_registered_players{
     return `${year}.${month}.${day}`;
   }
   
-  async register(info = {uid:"",name:"",email:"",nickname:"",icon:""}){
-    const newPlayer = this.DBRef.child(info.uid);
-    const snapshot = await newPlayer.once('value');
-    const registrData = snapshot.val();
-    
-    if(registrData === null){
-      if(await this.validNickname(info.nickname)){
-        try{
-          let data = {
-            name: info.name,
-            email: info.email,
-            nickname: info.nickname,
-            status: "offline",
-            description:`${info.name}'s registration occurred on ${this.curDate()} at ${this.curTime()}`
-          };
-          await newPlayer.set(data);
-          console.log(`${info.name} is registred on ${this.curDate()} at ${this.curTime()}`);
-          await this.db_player_page.create(info);
-          return true;
-        }catch(error){
-          console.log(`${error} occured`);
+  async  validNickname(nickname) {
+    try {
+        const snapshot = await this.DBRef.orderByChild('nickname').equalTo(nickname).once('value');
+        if (snapshot.exists()) {
           return false;
+        } else {
+            return true;
         }
-      }
-      else{
-        console.log(`${info.nickname} is already in use. select other nickname to register`);
+    } catch (error) {
+        console.error(`Error checking nickname availability: ${error}`);
         return false;
-      }
     }
-    else{
-      console.log(`${info.name} has already registered`);
-      return false;
+}
+
+  async  register(info) {
+    try {
+        const newPlayer = this.DBRef.child(info.uid);
+        const snapshot = await newPlayer.once('value');
+        const registrData = snapshot.val();
+
+        if (registrData === null) {
+            const isNicknameValid = await this.validNickname(info.nickname);
+
+            if (isNicknameValid) {
+                const data = {
+                    name: info.name,
+                    email: info.email,
+                    nickname: info.nickname,
+                    status: "offline",
+                    description: `${info.name}'s registration occurred on ${this.curDate()} at ${this.curTime()}`
+                };
+
+                await newPlayer.set(data);
+                console.log(`${info.name} is registered on ${this.curDate()} at ${this.curTime()}\n`);
+                
+                await this.db_player_page.create(info);
+                return true;
+            } else {
+                console.log(`${info.nickname} is already in use. Select another nickname to register\n`);
+                return false;
+            }
+        } else {
+            console.log(`${info.name} has already registered\n`);
+            return false;
+        }
+    } catch (error) {
+        console.error(`Error during registration: ${error}\n`);
+        return false;
     }
-  }
+}
+
+
+
 
 
     async changeStatus(playerUid="", newStatus=""){
@@ -245,23 +269,7 @@ class DB_registered_players{
       }
     }
 
-    async validNickname(nickname=""){
-      try{
-        const snapshot = await this.DBRef.once('value');
-        const data = snapshot.val();
-        for (let i in data){
-          if(data[i].nickname === nickname){
-            console.log(`this nickname ${nickname} is used`);
-            return false;
-          }
-        }
-        console.log(`this nickname ${nickname} can be used`);
-        return true;
-      }catch(error){
-        console.log(`error rised: ${error}`);
-        return false;
-      }
-    }
+   
 
 
 
@@ -284,10 +292,10 @@ class DB_registered_players{
             nickname:info.nickname,
             icon:info.icon
           },
-          played_games: this.played_games,
-          player_friends:"Empty",
-          sent_invitation:"Empty",
-          received_invitation:"Empty"
+          games: this.played_games,
+          friends:"Empty",
+          invitations:"Empty",
+          requests:"Empty"
         });
         console.log(`Personal page for ${info.name} is created`);
       }
@@ -295,16 +303,6 @@ class DB_registered_players{
         console.log(`Create perosnal page for ${info.name} Error: ${error}`);
       }
     }
-
-
-
-
-
-
-
-
-
-
 
 
     async games(uid, gameName) {
@@ -329,85 +327,106 @@ class DB_registered_players{
     }
 
 
-
-
-
-    async send_invite(sender={uid:"",nickname:""}, receiver={uid:"",nickname:""}){
-
-
-
+    async invite(sender={uid:"",name:"",email:"",nickname:"",icon:""}, receiver={uid:"",name:"",email:"",nickname:"",icon:""}){
+      const senderRef = this.DBRef.child(`${sender.uid}`);
+      const receiverRef = this.DBRef.child(`${receiver.uid}`);
       
-      const receiverRef = this.DBRef.child(`${receiver.uid}/received_invitation`);
-      const senderRef = this.DBRef.child(`${sender.uid}/sent_invitation`);
-      const frienListSnapshot = (await this.DBRef.child(`${sender.uid}/player_friends/${receiver.uid}`).once('value')).val();
-      const sentInvitationSnapshot = (await this.DBRef.child(`${sender.uid}/sent_invitation/${receiver.uid}`).once('value')).val();
-      const receivedInvitationSnapshot = (await this.DBRef.child(`${sender.uid}/received_invitation/${receiver.uid}`).once('value')).val();
-      
-      
-      if(frienListSnapshot === null && sentInvitationSnapshot == null && receivedInvitationSnapshot=== null){
-        try{
-          await receiverRef.set({
-            [sender.uid]:{ sender, status: "waiting", message: `${sender.nickname} wants to be your friend!`}
-          });
-          
-          await senderRef.set({
-            [receiver.uid]:{receiver,status:"waitind", message:`frined request was sent to ${receiver.nickname}`}
-          });
-          return true;
-        }catch(error){
-          return false;
-        }
-      }
+      const friendsSnapshot = (await senderRef.child(`friends/${receiver.uid}`).once('value')).val();
+      const invitationsSnapshot = (await senderRef.child(`invitations/${receiver.uid}`).once('value')).val();
+      const requestsSnapshot = (await senderRef.child(`requests/${receiver.uid}`).once('value')).val();
+    
 
-      else{
-        console.log(`${receiver.nickname} is already in friendlist or ivitation is already sent`)
+      if(friendsSnapshot === null && invitationsSnapshot === null && requestsSnapshot == null){
+      try {
+        await receiverRef.child(`requests/${sender.uid}`).set({from: sender, message: `${sender.nickname} wants to be your friend!`});
+        await senderRef.child(`invitations/${receiver.uid}`).set({to: receiver, message: `Friend request was sent to ${receiver.nickname}`});
+        
+        console.log(`Invitation is sent to ${receiver.nickname}`);
+        return true;
+      } catch(error) {
+        console.log(`Error: Invitation is not sent - ${error}`);
         return false;
       }
-    
+    }
+    else{
+      if(friendsSnapshot){
+        console.log(`${receiver.nickname} is already ${sender.nickname}'s friend`);
+        return false;
+      }
+      else if(invitationsSnapshot){
+        console.log(`Invitation from ${sender.nickname} to ${receiver.nickname} already exists`);
+        return false;
+      }
+      else if(requestsSnapshot){
+        console.log(`${sender.nickname} has a request from ${receiver.nickname}`);
+        return false;
+      }
+    }
     }
 
+    
 
-    async handel_request(sender={uid:"",nickname:""}, receiver={uid:"",nickname:""}, status="reject"){
-      const  receiverMsg = (await this.DBRef.child(`${receiver.uid}/received_invitation/${sender.uid}`).once("value")).val();
-      const senderMsg =    (await this.DBRef.child(`${sender.uid}/sent_invitation/${receiver.uid}`).once("value")).val();
+    async  requests(uid = "") {
+      const reqRRef = await this.DBRef.child(uid).once('value');
+   
+      if (reqRRef.exists()) {
+         const requestsListSnapshot = reqRRef.child(`requests`);
+         requestsListSnapshot.forEach( childSnapshot => {
+            const childData = childSnapshot.val();
+            console.log(childData);
+         });
+      }
+   }
+   
+   
+   async  handleRequests(uid, reqUid){
+    try {
+      const reqRef = await this.DBRef.child(`${uid}/requests/${reqUid}`).once('value');
+      const friendRef = await this.DBRef.child(reqUid).once('value');
       
-      if(receiverMsg && senderMsg){
-        const receiverRef = this.DBRef.child(`${receiver.uid}/received_invitation`);
-        const senderRef = this.DBRef.child(`${sender.uid}/sent_invitation`);
-        const receiverFriendRef = this.DBRef.child(`${receiver.uid}/player_friends`);
-        const senderFriendRef = this.DBRef.child(`${sender.uid}/player_friends`);
-        console.log('OK')
+      if (reqRef.exists() && friendRef.exists()) {
+        const aRef = this.DBRef.child(uid);
+        const bRef = this.DBRef.child(reqUid);
+        const myData = friendRef.val();
+        const friendData = reqRef.val();
+        
+        if (friendData.from && myData.invitations && myData.invitations[uid] && myData.invitations[uid].to) {
+          await Promise.all([
+            aRef.child(`friends/${reqUid}`).set(friendData.from),
+            aRef.child(`requests/${reqUid}`).remove(),
 
-        if(status === "accept")
-        {
-          try{
-            await receiverFriendRef.set({[sender.uid]:sender});
-          }catch(e){
-          }
-          try{
-            await senderFriendRef.set({[receiver.uid]:receiver});
-          }catch(e){
+            bRef.child(`friends/${uid}`).set(myData.invitations[uid].to),
+            bRef.child(`invitations/${uid}`).remove()
+          ]);
+          
+          console.log("Friend request handled successfully!");
+          return true;
+        }else {
+           console.log("Error: 'from' or 'to' data is missing or undefined.");
+           return false;
           }
         }
-            receiverRef.child(sender.uid).remove().then(() => {console.log('Entry  removed successfully.');
-          }).catch((error) => {
-            console.error('Error removing entry:', error);});
-            
-            senderRef.child(receiver.uid).remove().then(() => {console.log('Entry removed successfully.');
-          }).catch((error) => {
-            console.error('Error removing entry:', error);});
-            
+        else {
+          console.log("Error: Request or friend not found.");
+          return false;
         }
-       
+      } catch (error) {
+        console.error("Error handling friend request:", error);
+        return false;
+      }
     }
 
 
 
 
-    
-    
-  }
 
+
+
+
+
+
+
+}
 
 
 
